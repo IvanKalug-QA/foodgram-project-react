@@ -1,0 +1,40 @@
+version: '3'
+
+volumes:
+  pg_data:
+  static:
+  media:
+
+services:
+  db:
+    image: postgres:13
+    env_file: ../.env
+    volumes:
+      - pg_data:/var/lib/postgresql/data
+  backend:
+    image: kaluginivan/foodgram_backend:latest
+    env_file: ../.env
+    volumes:
+      - static:/static
+      - media:/app/media
+    depends_on:
+      - db
+  frontend:
+    image: kaluginivan/foodgram_frontend:latest
+    volumes:
+      - ../frontend/:/app/result_build/
+    depends_on:
+      - backend
+  gateway:
+    image: nginx:1.19.3
+    ports:
+      - 9090:80
+    volumes:
+      - ./nginx.conf:/etc/nginx/conf.d/default.conf
+      - ../frontend/build:/usr/share/nginx/html/
+      - ../docs/redoc.html:/usr/share/nginx/html/api/docs/redoc.html
+      - ../docs/openapi-schema.yml:/usr/share/nginx/html/api/docs/openapi-schema.yml
+      - static:/var/html/static/
+      - media:/var/html/media/
+    depends_on:
+      - frontend
