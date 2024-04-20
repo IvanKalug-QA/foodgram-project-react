@@ -2,7 +2,6 @@ import django_filters
 from django_filters import rest_framework as rest_framework_filters
 from django.db.models import Exists
 from django.db.models import OuterRef
-
 from foods.models import Reciept, Favorited, ShoppingCart, Tag
 
 

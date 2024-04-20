@@ -4,8 +4,8 @@ from rest_framework.response import Response
 
 def return_400_bad_request(massage):
     return Response(
-                    {'error': massage},
-                    status=status.HTTP_400_BAD_REQUEST)
+        {'error': massage},
+        status=status.HTTP_400_BAD_REQUEST)
 
 
 def return_201_created(serializer):

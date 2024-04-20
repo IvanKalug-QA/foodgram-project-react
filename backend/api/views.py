@@ -9,12 +9,11 @@ from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime as dt
 from django.db.models import Sum
-
-
 from foods.models import (
     CustomUser,
     Tag, Reciept,
     Ingredients, Favorited, ShoppingCart, Follow, IngredientsReciept)
+
 from .serializers import (
     TagsSerializer,
     RecieptSerializer,
