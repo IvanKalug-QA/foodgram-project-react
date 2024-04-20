@@ -4,7 +4,6 @@ from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 from django.core.files.base import ContentFile
 from django.core.exceptions import ObjectDoesNotExist
-
 from foods.models import (
     CustomUser,
     Tag,
@@ -155,7 +154,7 @@ class CreateRecieptSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError(
                 'Нельзя передавать пустые ингредиенты!')
         elif (len(set(
-             ingredient.get('id') for ingredient in ingredients)) != len(
+            ingredient.get('id') for ingredient in ingredients)) != len(
                 [ingredient.get('id') for ingredient in ingredients])):
             raise serializers.ValidationError(
                 'Ингредиенты должны быть уникальными!'
@@ -250,15 +249,15 @@ class RecieptShortSerializer(serializers.ModelSerializer):
         path = self.context['request'].path
         if 'favorite' in path:
             if Favorited.objects.filter(
-                 user=user.id, favorite=object.id).exists():
+                    user=user.id, favorite=object.id).exists():
                 raise serializers.ValidationError(
                     detail='Ты уже добавил в избранное!'
                 )
             return data
         elif ShoppingCart.objects.filter(
-             user=user.id, shopping_cart=object.id).exists():
+                user=user.id, shopping_cart=object.id).exists():
             raise serializers.ValidationError(
-                 detail='Ты уже добавил в корзину!'
+                detail='Ты уже добавил в корзину!'
             )
         return data
 
@@ -292,6 +291,6 @@ class FollowSerializer(GetUserSerializer):
             )
         elif Follow.objects.filter(user=user.id, following=author.id).exists():
             raise serializers.ValidationError(
-                 detail='Ты уже подписан!'
+                detail='Ты уже подписан!'
             )
         return data
