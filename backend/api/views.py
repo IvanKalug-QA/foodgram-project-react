@@ -42,7 +42,7 @@ class UserModelViewSet(UserViewSet):
 
     @action(
         detail=True,
-        methods=['POST', 'DELETE',], permission_classes=[IsAuthenticated,])
+        methods=['POST', 'DELETE', ], permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, pk):
         user_to_follow = self.get_object()
         if request.method == 'POST':
@@ -64,7 +64,7 @@ class UserModelViewSet(UserViewSet):
 class TagModelViewSet(ModelViewSet):
     queryset = Tag.objects.all()
     serializer_class = TagsSerializer
-    http_method_names = ['get',]
+    http_method_names = ['get', ]
     permission_classes = [GetUserPermission, ]
     pagination_class = None
 
@@ -169,4 +169,4 @@ class IngredientsViewSet(ModelViewSet):
     http_method_names = ['get']
     filter_backends = [DjangoFilterBackend, ]
     filterset_fields = ('name',)
-    permission_classes = [GetUserPermission,]
+    permission_classes = [GetUserPermission, ]
