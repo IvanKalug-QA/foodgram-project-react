@@ -166,5 +166,5 @@ DJOSER = {
 }
 
 CSRF_TRUSTED_ORIGINS = [
-    'ivanfoodgram.zapto.org',
+    'https://ivanfoodgram.zapto.org',
 ]
