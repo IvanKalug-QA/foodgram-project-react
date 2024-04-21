@@ -164,3 +164,7 @@ DJOSER = {
         'user': ['api.permissions.GetUserPermission']
     }
 }
+
+CSRF_TRUSTED_ORIGINS = [
+    'ivanfoodgram.zapto.org',
+]
