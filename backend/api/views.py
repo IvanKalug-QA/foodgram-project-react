@@ -45,7 +45,7 @@ class UserModelViewSet(UserViewSet):
     def subscribe(self, request, pk):
         return create_and_delete_method(
             request, FollowSerializer, request.user,
-            Follow, 'following', pk)
+            Follow, 'following', pk, 'Такой подписки нет!')
 
 
 class TagModelViewSet(ModelViewSet):
@@ -75,7 +75,7 @@ class ReciptViewSet(ModelViewSet):
     def favorite(self, request, pk):
         return create_and_delete_method(
             request, ReciptShortSerializer,
-            request.user, Favorited, 'favorite', pk
+            request.user, Favorited, 'favorite', pk, 'Такого в избранном нет!'
         )
 
     @action(
@@ -84,7 +84,8 @@ class ReciptViewSet(ModelViewSet):
     def shopping_cart(self, request, pk):
         return create_and_delete_method(
             request, ReciptShortSerializer,
-            request.user, ShoppingCart, 'shopping_cart', pk)
+            request.user,
+            ShoppingCart, 'shopping_cart', pk, 'Такого в корзине нет!')
 
     @action(
         methods=['GET'],

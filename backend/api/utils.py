@@ -45,7 +45,8 @@ def create_ingredients(model,
 
 
 def create_and_delete_method(request,
-                             serializator, user, model, field_name, pk):
+                             serializator,
+                             user, model, field_name, pk, message):
     if request.method == 'POST':
         if 'subscribe' in request.path:
             obj = get_object_or_404(User, pk=pk)
@@ -70,7 +71,7 @@ def create_and_delete_method(request,
                 user=user, **{field_name: obj}).delete()
             return Response(status=status.HTTP_204_NO_CONTENT)
         except ObjectDoesNotExist:
-            return return_400_bad_request('Такой подписки нет!')
+            return return_400_bad_request(message)
 
 
 def filter_generic(queryset, name,
