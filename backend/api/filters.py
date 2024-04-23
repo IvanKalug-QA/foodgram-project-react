@@ -1,8 +1,8 @@
 import django_filters
 from django_filters import rest_framework as rest_framework_filters
-from django.db.models import Exists
-from django.db.models import OuterRef
-from foods.models import Reciept, Favorited, ShoppingCart, Tag
+
+from foods.models import Recipt, Favorited, ShoppingCart, Tag
+from .utils import filter_generic
 
 
 class RecipeFilter(rest_framework_filters.FilterSet):
@@ -15,39 +15,18 @@ class RecipeFilter(rest_framework_filters.FilterSet):
         field_name="is_in_shopping_cart", method="filter_is_in_shopping_cart")
 
     class Meta:
-        model = Reciept
+        model = Recipt
         fields = ("author", "tags", "is_favorited", "is_in_shopping_cart")
 
     def filter_is_favorited(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated:
-            if value:
-                return queryset.annotate(
-                    is_favorited=Exists(
-                        Favorited.objects.filter(
-                            user=user, favorite=OuterRef("pk"))
-                    )
-                ).filter(is_favorited=True)
-            else:
-                return queryset.exclude(
-                    users_favorite__user=user
-                )
-        else:
-            return queryset.none()
+        return filter_generic(
+            queryset, name, value,
+            Favorited, "favorite", "is_favorited", self.request.user
+        )
 
     def filter_is_in_shopping_cart(self, queryset, name, value):
-        user = self.request.user
-        if user.is_authenticated:
-            if value:
-                return queryset.annotate(
-                    is_in_shopping_cart=Exists(
-                        ShoppingCart.objects.filter(
-                            user=user, shopping_cart=OuterRef("pk"))
-                    )
-                ).filter(is_in_shopping_cart=True)
-            else:
-                return queryset.exclude(
-                    users_shopping_cart__user=user
-                )
-        else:
-            return queryset.none()
+        return filter_generic(
+            queryset, name, value,
+            ShoppingCart,
+            "shopping_cart", "is_in_shopping_cart", self.request.user
+        )

@@ -76,7 +76,7 @@ class Tag(models.Model):
         ordering = ('id',)
 
 
-class Reciept(models.Model):
+class Recipt(models.Model):
     tags = models.ManyToManyField(Tag, related_name='recipes')
     author = models.ForeignKey(
         CustomUser,
@@ -84,7 +84,7 @@ class Reciept(models.Model):
         verbose_name='Автор',
         related_name='recipes_author')
     ingredients = models.ManyToManyField(
-        Ingredients, through='IngredientsReciept'
+        Ingredients, through='IngredientsRecipt'
     )
     name = models.CharField(
         max_length=200,
@@ -106,12 +106,12 @@ class Reciept(models.Model):
         return self.name
 
 
-class IngredientsReciept(models.Model):
+class IngredientsRecipt(models.Model):
     ingredient = models.ForeignKey(
         Ingredients, on_delete=models.CASCADE
     )
-    reciept = models.ForeignKey(
-        Reciept, on_delete=models.CASCADE, related_name='ingredient_list',
+    recipes = models.ForeignKey(
+        Recipt, on_delete=models.CASCADE, related_name='ingredient_list',
     )
     amount = models.SmallIntegerField(
         verbose_name='Вес',
@@ -146,7 +146,7 @@ class Favorited(models.Model):
         related_name='favorited'
     )
     favorite = models.ForeignKey(
-        Reciept,
+        Recipt,
         on_delete=models.CASCADE,
         related_name='users_favorite'
     )
@@ -163,7 +163,7 @@ class ShoppingCart(models.Model):
         related_name='in_shopping_cart'
     )
     shopping_cart = models.ForeignKey(
-        Reciept,
+        Recipt,
         on_delete=models.CASCADE,
         related_name='users_shopping_cart'
     )

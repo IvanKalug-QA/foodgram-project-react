@@ -5,24 +5,23 @@ from rest_framework.decorators import action
 from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
-from django.core.exceptions import ObjectDoesNotExist
 from rest_framework.permissions import IsAuthenticated
 from datetime import datetime as dt
 from django.db.models import Sum
+
 from foods.models import (
     CustomUser,
-    Tag, Reciept,
-    Ingredients, Favorited, ShoppingCart, Follow, IngredientsReciept)
-
+    Tag, Recipt,
+    Ingredients, Favorited, ShoppingCart, Follow, IngredientsRecipt)
 from .serializers import (
     TagsSerializer,
-    RecieptSerializer,
+    ReciptSerializer,
     IngredientSerializer,
-    CreateRecieptSerializer, FollowSerializer, RecieptShortSerializer)
+    CreateReciptSerializer, FollowSerializer, ReciptShortSerializer)
 from .permissions import GetUserPermission, RecieptPermission
 from .filters import RecipeFilter
 from .paginations import FollowPagination
-from .utils import return_400_bad_request, return_201_created
+from .utils import create_and_delete_method
 
 
 class UserModelViewSet(UserViewSet):
@@ -44,21 +43,9 @@ class UserModelViewSet(UserViewSet):
         detail=True,
         methods=['POST', 'DELETE', ], permission_classes=[IsAuthenticated, ])
     def subscribe(self, request, pk):
-        user_to_follow = self.get_object()
-        if request.method == 'POST':
-            serializer = FollowSerializer(
-                user_to_follow,
-                data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Follow.objects.create(user=request.user, following=user_to_follow)
-            return return_201_created(serializer)
-        elif request.method == 'DELETE':
-            try:
-                Follow.objects.get(
-                    user=request.user, following=user_to_follow).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except ObjectDoesNotExist:
-                return return_400_bad_request('Такой подписки нет!')
+        return create_and_delete_method(
+            request, FollowSerializer, request.user,
+            Follow, 'following', pk)
 
 
 class TagModelViewSet(ModelViewSet):
@@ -69,8 +56,8 @@ class TagModelViewSet(ModelViewSet):
     pagination_class = None
 
 
-class RecieptViewSet(ModelViewSet):
-    queryset = Reciept.objects.all()
+class ReciptViewSet(ModelViewSet):
+    queryset = Recipt.objects.all()
     permission_classes = (RecieptPermission,)
     filter_backends = [DjangoFilterBackend, ]
     filterset_class = RecipeFilter
@@ -79,55 +66,25 @@ class RecieptViewSet(ModelViewSet):
 
     def get_serializer_class(self):
         if self.action == 'create' or self.action == 'partial_update':
-            return CreateRecieptSerializer
-        return RecieptSerializer
+            return CreateReciptSerializer
+        return ReciptSerializer
 
     @action(
         methods=['POST', 'DELETE'],
         detail=True, permission_classes=[IsAuthenticated])
     def favorite(self, request, pk):
-        user = request.user
-        if request.method == 'POST':
-            try:
-                reciept = Reciept.objects.get(pk=pk)
-            except ObjectDoesNotExist:
-                return return_400_bad_request('Такого рецепта нет!')
-            serializer = RecieptShortSerializer(
-                reciept, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            Favorited.objects.create(user=user, favorite=reciept)
-            return return_201_created(serializer)
-        elif request.method == 'DELETE':
-            reciept = self.get_object()
-            try:
-                Favorited.objects.get(user=user, favorite=reciept).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except ObjectDoesNotExist:
-                return return_400_bad_request('Такого в избранном нет!')
+        return create_and_delete_method(
+            request, ReciptShortSerializer,
+            request.user, Favorited, 'favorite', pk
+        )
 
     @action(
         methods=['POST', 'DELETE'],
         detail=True, permission_classes=[IsAuthenticated])
     def shopping_cart(self, request, pk):
-        user = request.user
-        if request.method == 'POST':
-            try:
-                reciept = Reciept.objects.get(pk=pk)
-            except ObjectDoesNotExist:
-                return return_400_bad_request('Такого рецепта нет!')
-            serializer = RecieptShortSerializer(
-                reciept, data=request.data, context={'request': request})
-            serializer.is_valid(raise_exception=True)
-            ShoppingCart.objects.create(user=user, shopping_cart=reciept)
-            return return_201_created(serializer)
-        elif request.method == 'DELETE':
-            reciept = self.get_object()
-            try:
-                ShoppingCart.objects.get(
-                    user=user, shopping_cart=reciept).delete()
-                return Response(status=status.HTTP_204_NO_CONTENT)
-            except ObjectDoesNotExist:
-                return return_400_bad_request('Такого рецепта тут нет!')
+        return create_and_delete_method(
+            request, ReciptShortSerializer,
+            request.user, ShoppingCart, 'shopping_cart', pk)
 
     @action(
         methods=['GET'],
@@ -136,8 +93,8 @@ class RecieptViewSet(ModelViewSet):
         user = request.user
         if not user.in_shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        ingredients = IngredientsReciept.objects.filter(
-            reciept__users_shopping_cart__user=request.user
+        ingredients = IngredientsRecipt.objects.filter(
+            recipes__users_shopping_cart__user=request.user
         ).values(
             'ingredient__name',
             'ingredient__measurement_unit'

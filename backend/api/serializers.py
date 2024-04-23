@@ -3,16 +3,17 @@ import base64
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 from django.core.files.base import ContentFile
-from django.core.exceptions import ObjectDoesNotExist
+
 from foods.models import (
     CustomUser,
     Tag,
-    Reciept,
+    Recipt,
     Follow,
     Ingredients,
-    IngredientsReciept,
+    IngredientsRecipt,
     Favorited,
     ShoppingCart)
+from .utils import create_ingredients
 
 
 class GetUserSerializer(serializers.ModelSerializer):
@@ -65,7 +66,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        model = IngredientsReciept
+        model = IngredientsRecipt
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
@@ -79,7 +80,7 @@ class Base64ImageSerializer(serializers.ImageField):
         return super().to_internal_value(data)
 
 
-class RecieptSerializer(serializers.ModelSerializer):
+class ReciptSerializer(serializers.ModelSerializer):
     tags = TagsSerializer(many=True)
     ingredients = IngredientAmountSerializer(
         source='ingredient_list', many=True)
@@ -103,7 +104,7 @@ class RecieptSerializer(serializers.ModelSerializer):
         return False
 
     class Meta:
-        model = Reciept
+        model = Recipt
         fields = (
             'id',
             'tags',
@@ -125,11 +126,11 @@ class CreateIngredientsInRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
 
-        model = IngredientsReciept
+        model = IngredientsRecipt
         fields = ('id', 'amount')
 
 
-class CreateRecieptSerializer(serializers.ModelSerializer):
+class CreateReciptSerializer(serializers.ModelSerializer):
     image = Base64ImageSerializer()
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
@@ -137,7 +138,7 @@ class CreateRecieptSerializer(serializers.ModelSerializer):
     cooking_time = serializers.IntegerField(min_value=1)
 
     class Meta:
-        model = Reciept
+        model = Recipt
         fields = (
             'tags',
             'ingredients',
@@ -150,12 +151,11 @@ class CreateRecieptSerializer(serializers.ModelSerializer):
     def validate(self, data):
         ingredients = data.get('ingredients')
         tags = data.get('tags')
-        if not ingredients:
+        if not ingredients or ingredients is None:
             raise serializers.ValidationError(
                 'Нельзя передавать пустые ингредиенты!')
-        elif (len(set(
-            ingredient.get('id') for ingredient in ingredients)) != len(
-                [ingredient.get('id') for ingredient in ingredients])):
+        ingredients_list = [ingredient.get('id') for ingredient in ingredients]
+        if (len(set(ingredients_list)) != len(ingredients_list)):
             raise serializers.ValidationError(
                 'Ингредиенты должны быть уникальными!'
             )
@@ -171,7 +171,7 @@ class CreateRecieptSerializer(serializers.ModelSerializer):
 
     def to_representation(self, instance):
 
-        serializer = RecieptSerializer(
+        serializer = ReciptSerializer(
             instance,
             context={
                 'request': self.context.get('request')
@@ -183,61 +183,30 @@ class CreateRecieptSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        reciept = Reciept.objects.create(**validated_data, author=user)
-        reciept.tags.set(tags)
-        for ingredient in ingredients:
-            id = ingredient['id']
-            amount = ingredient['amount']
-            try:
-                current_ingredient = Ingredients.objects.get(id=id)
-                IngredientsReciept.objects.create(
-                    ingredient=current_ingredient,
-                    reciept=reciept,
-                    amount=amount
-                )
-            except ObjectDoesNotExist:
-                raise serializers.ValidationError(
-                    'Несуществующие ингредиент!'
-                )
-        return reciept
+        recipes = Recipt.objects.create(**validated_data, author=user)
+        recipes.tags.set(tags)
+        create_ingredients(
+            Ingredients, recipes, IngredientsRecipt, ingredients)
+        return recipes
 
     def update(self, instance, validated_data):
-        instance.name = validated_data.get('name', instance.name)
-        instance.text = validated_data.get('text', instance.text)
-        instance.image = validated_data.get('image', instance.image)
-        instance.cooking_time = validated_data.get('cooking_time',
-                                                   instance.cooking_time)
-
-        if "tags" in validated_data:
+        if 'tags' in validated_data:
             tags_data = validated_data.pop('tags')
             instance.tags.set(tags_data)
 
         if "ingredients" in validated_data:
             ingredients_data = validated_data.pop('ingredients')
-            IngredientsReciept.objects.filter(reciept=instance).delete()
-            for ingredient in ingredients_data:
-                id = ingredient['id']
-                amount = ingredient['amount']
-                try:
-                    current_ingredient = Ingredients.objects.get(id=id)
-                    IngredientsReciept.objects.create(
-                        ingredient=current_ingredient,
-                        reciept=instance,
-                        amount=amount
-                    )
-                except ObjectDoesNotExist:
-                    raise serializers.ValidationError(
-                        'Несуществующие ингредиент!'
-                    )
-        instance.save()
-        return instance
+            IngredientsRecipt.objects.filter(recipes=instance).delete()
+            create_ingredients(
+                Ingredients, instance, IngredientsRecipt, ingredients_data)
+        return super().update(instance, validated_data)
 
 
-class RecieptShortSerializer(serializers.ModelSerializer):
+class ReciptShortSerializer(serializers.ModelSerializer):
     image = Base64ImageSerializer(read_only=True)
 
     class Meta:
-        model = Reciept
+        model = Recipt
         fields = (
             'id', 'name', 'image', 'cooking_time'
         )
@@ -264,10 +233,8 @@ class RecieptShortSerializer(serializers.ModelSerializer):
 
 class FollowSerializer(GetUserSerializer):
     recipes = serializers.SerializerMethodField()
-    recipes_count = serializers.SerializerMethodField()
-
-    def get_recipes_count(self, obj):
-        return obj.recipes_author.count()
+    recipes_count = serializers.IntegerField(
+        source='recipes_author.count', read_only=True)
 
     class Meta(GetUserSerializer.Meta):
         fields = GetUserSerializer.Meta.fields + ('recipes', 'recipes_count')
@@ -275,11 +242,11 @@ class FollowSerializer(GetUserSerializer):
     def get_recipes(self, obj):
         request = self.context['request']
         limit = request.GET.get('recipes_limit')
-        reciepes = obj.recipes_author.all()
+        recipes = obj.recipes_author.all()
         if limit:
-            reciepes = reciepes[:int(limit)]
-        serializer = RecieptShortSerializer(
-            reciepes, many=True, required=False)
+            recipes = recipes[:int(limit)]
+        serializer = ReciptShortSerializer(
+            recipes, many=True, required=False)
         return serializer.data
 
     def validate(self, data):

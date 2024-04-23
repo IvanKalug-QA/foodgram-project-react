@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from foods.models import (
     Follow,
-    Tag, Ingredients, Reciept, Favorited, ShoppingCart, IngredientsReciept)
+    Tag, Ingredients, Recipt, Favorited, ShoppingCart, IngredientsRecipt)
 
 User = get_user_model()
 
@@ -27,7 +27,7 @@ class IngredientsAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
 
 
-class RecieptAdmin(admin.ModelAdmin):
+class ReciptAdmin(admin.ModelAdmin):
     list_display = (
         'name',
         'author',
@@ -47,7 +47,7 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Follow)
 admin.site.register(Tag)
 admin.site.register(Ingredients, IngredientsAdmin)
-admin.site.register(Reciept, RecieptAdmin)
+admin.site.register(Recipt, ReciptAdmin)
 admin.site.register(Favorited)
 admin.site.register(ShoppingCart)
-admin.site.register(IngredientsReciept)
+admin.site.register(IngredientsRecipt)
