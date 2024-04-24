@@ -3,6 +3,7 @@ import base64
 from rest_framework import serializers
 from djoser.serializers import UserCreateSerializer
 from django.core.files.base import ContentFile
+from django.db import transaction
 
 from foods.models import (
     CustomUser,
@@ -179,22 +180,24 @@ class CreateReciptSerializer(serializers.ModelSerializer):
         )
         return serializer.data
 
+    @transaction.atomic
     def create(self, validated_data):
         user = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipes = Recipt.objects.create(**validated_data, author=user)
-        recipes.tags.set(tags)
+        recipt = Recipt.objects.create(**validated_data, author=user)
+        recipt.tags.set(tags)
         create_ingredients(
-            Ingredients, recipes, IngredientsRecipt, ingredients)
-        return recipes
+            Ingredients, recipt, IngredientsRecipt, ingredients)
+        return recipt
 
+    @transaction.atomic
     def update(self, instance, validated_data):
         if 'tags' in validated_data:
             tags_data = validated_data.pop('tags')
             instance.tags.set(tags_data)
 
-        if "ingredients" in validated_data:
+        if 'ingredients' in validated_data:
             ingredients_data = validated_data.pop('ingredients')
             IngredientsRecipt.objects.filter(recipes=instance).delete()
             create_ingredients(

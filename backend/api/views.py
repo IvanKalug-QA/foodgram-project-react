@@ -1,3 +1,5 @@
+from datetime import datetime as dt
+
 from django.http import HttpResponse
 from rest_framework.viewsets import ModelViewSet
 from djoser.views import UserViewSet
@@ -6,7 +8,6 @@ from rest_framework.response import Response
 from django_filters.rest_framework import DjangoFilterBackend
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
-from datetime import datetime as dt
 from django.db.models import Sum
 
 from foods.models import (
