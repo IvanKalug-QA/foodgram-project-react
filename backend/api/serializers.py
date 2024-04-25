@@ -123,7 +123,10 @@ class ReciptSerializer(serializers.ModelSerializer):
 class CreateIngredientsInRecipeSerializer(serializers.ModelSerializer):
 
     id = serializers.IntegerField()
-    amount = serializers.IntegerField(min_value=1)
+    amount = serializers.IntegerField(
+        min_value=1,
+        error_messages={
+            'min_value': 'Значение должно быть больше или равно 1.'})
 
     class Meta:
 
@@ -136,7 +139,10 @@ class CreateReciptSerializer(serializers.ModelSerializer):
     tags = serializers.PrimaryKeyRelatedField(
         queryset=Tag.objects.all(), many=True)
     ingredients = CreateIngredientsInRecipeSerializer(many=True)
-    cooking_time = serializers.IntegerField(min_value=1)
+    cooking_time = serializers.IntegerField(
+        min_value=1,
+        error_messages={
+            'min_value': 'Значение должно быть больше или равно 1.'})
 
     class Meta:
         model = Recipt

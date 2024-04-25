@@ -121,6 +121,9 @@ class IngredientsRecipt(models.Model):
         )]
     )
 
+    def __str__(self) -> str:
+        return self.ingredient
+
 
 class Follow(models.Model):
     user = models.ForeignKey(

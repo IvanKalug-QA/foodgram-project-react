@@ -27,6 +27,12 @@ class IngredientsAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
 
 
+class IngredientsReciptInline(admin.TabularInline):
+    model = IngredientsRecipt
+    min_num = 1
+    extra = 1
+
+
 class ReciptAdmin(admin.ModelAdmin):
     list_display = (
         'name',
@@ -35,7 +41,8 @@ class ReciptAdmin(admin.ModelAdmin):
     )
     list_filter = ('name',)
     list_display_links = ('name',)
-    filter_horizontal = ('tags', 'ingredients')
+    filter_horizontal = ('tags',)
+    inlines = [IngredientsReciptInline]
 
     def total_favorites(self, obj):
         return Favorited.objects.filter(favorite=obj).count()
