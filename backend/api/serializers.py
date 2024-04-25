@@ -185,11 +185,11 @@ class CreateReciptSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipt = Recipt.objects.create(**validated_data, author=user)
-        recipt.tags.set(tags)
+        recipe = Recipt.objects.create(**validated_data, author=user)
+        recipe.tags.set(tags)
         create_ingredients(
-            Ingredients, recipt, IngredientsRecipt, ingredients)
-        return recipt
+            Ingredients, recipe, IngredientsRecipt, ingredients)
+        return recipe
 
     @transaction.atomic
     def update(self, instance, validated_data):
