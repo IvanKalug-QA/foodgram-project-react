@@ -22,8 +22,6 @@ ALLOWED_HOSTS = [
     '51.250.28.198', 'localhost', '127.0.0.1', 'ivanfoodgram.zapto.org']
 
 
-# Application definition
-
 INSTALLED_APPS = [
     'django.contrib.admin',
     'django.contrib.auth',
