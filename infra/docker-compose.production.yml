@@ -1,7 +1,7 @@
 version: '3'
 
 volumes:
-  pg_data_production:
+  pg_data_prod:
   static:
   media:
 
@@ -10,7 +10,7 @@ services:
     image: postgres:13
     env_file: ../.env
     volumes:
-      - pg_data_production:/var/lib/postgresql/data
+      - pg_data_prod:/var/lib/postgresql/data
   backend:
     image: kaluginivan/foodgram_backend:latest
     env_file: ../.env
