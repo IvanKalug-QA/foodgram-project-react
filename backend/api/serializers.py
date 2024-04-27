@@ -8,10 +8,10 @@ from django.db import transaction
 from foods.models import (
     CustomUser,
     Tag,
-    Recipt,
+    Recipe,
     Follow,
     Ingredients,
-    IngredientsRecipt,
+    IngredientsRecipe,
     Favorited,
     ShoppingCart)
 from .utils import create_ingredients
@@ -67,7 +67,7 @@ class IngredientAmountSerializer(serializers.ModelSerializer):
         source='ingredient.measurement_unit')
 
     class Meta:
-        model = IngredientsRecipt
+        model = IngredientsRecipe
         fields = ('id', 'name', 'measurement_unit', 'amount')
 
 
@@ -105,7 +105,7 @@ class ReciptSerializer(serializers.ModelSerializer):
         return False
 
     class Meta:
-        model = Recipt
+        model = Recipe
         fields = (
             'id',
             'tags',
@@ -130,7 +130,7 @@ class CreateIngredientsInRecipeSerializer(serializers.ModelSerializer):
 
     class Meta:
 
-        model = IngredientsRecipt
+        model = IngredientsRecipe
         fields = ('id', 'amount')
 
 
@@ -145,7 +145,7 @@ class CreateReciptSerializer(serializers.ModelSerializer):
             'min_value': 'Значение должно быть больше или равно 1.'})
 
     class Meta:
-        model = Recipt
+        model = Recipe
         fields = (
             'tags',
             'ingredients',
@@ -191,10 +191,10 @@ class CreateReciptSerializer(serializers.ModelSerializer):
         user = self.context.get('request').user
         ingredients = validated_data.pop('ingredients')
         tags = validated_data.pop('tags')
-        recipe = Recipt.objects.create(**validated_data, author=user)
+        recipe = Recipe.objects.create(**validated_data, author=user)
         recipe.tags.set(tags)
         create_ingredients(
-            Ingredients, recipe, IngredientsRecipt, ingredients)
+            Ingredients, recipe, IngredientsRecipe, ingredients)
         return recipe
 
     @transaction.atomic
@@ -205,9 +205,9 @@ class CreateReciptSerializer(serializers.ModelSerializer):
 
         if 'ingredients' in validated_data:
             ingredients_data = validated_data.pop('ingredients')
-            IngredientsRecipt.objects.filter(recipes=instance).delete()
+            IngredientsRecipe.objects.filter(recipes=instance).delete()
             create_ingredients(
-                Ingredients, instance, IngredientsRecipt, ingredients_data)
+                Ingredients, instance, IngredientsRecipe, ingredients_data)
         return super().update(instance, validated_data)
 
 
@@ -215,7 +215,7 @@ class ReciptShortSerializer(serializers.ModelSerializer):
     image = Base64ImageSerializer(read_only=True)
 
     class Meta:
-        model = Recipt
+        model = Recipe
         fields = (
             'id', 'name', 'image', 'cooking_time'
         )

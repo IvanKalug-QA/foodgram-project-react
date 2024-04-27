@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.contrib.auth import get_user_model
 from foods.models import (
     Follow,
-    Tag, Ingredients, Recipt, Favorited, ShoppingCart, IngredientsRecipt)
+    Tag, Ingredients, Recipe, Favorited, ShoppingCart, IngredientsRecipe)
 
 User = get_user_model()
 
@@ -27,8 +27,8 @@ class IngredientsAdmin(admin.ModelAdmin):
     list_display_links = ('name',)
 
 
-class IngredientsReciptInline(admin.TabularInline):
-    model = IngredientsRecipt
+class IngredientsRecipeInline(admin.TabularInline):
+    model = IngredientsRecipe
     min_num = 1
     extra = 1
 
@@ -42,7 +42,7 @@ class ReciptAdmin(admin.ModelAdmin):
     list_filter = ('name',)
     list_display_links = ('name',)
     filter_horizontal = ('tags',)
-    inlines = [IngredientsReciptInline]
+    inlines = [IngredientsRecipeInline]
 
     def total_favorites(self, obj):
         return Favorited.objects.filter(favorite=obj).count()
@@ -54,7 +54,7 @@ admin.site.register(User, UserAdmin)
 admin.site.register(Follow)
 admin.site.register(Tag)
 admin.site.register(Ingredients, IngredientsAdmin)
-admin.site.register(Recipt, ReciptAdmin)
+admin.site.register(Recipe, ReciptAdmin)
 admin.site.register(Favorited)
 admin.site.register(ShoppingCart)
-admin.site.register(IngredientsRecipt)
+admin.site.register(IngredientsRecipe)

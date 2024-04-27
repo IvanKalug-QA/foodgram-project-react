@@ -12,15 +12,15 @@ from django.db.models import Sum
 
 from foods.models import (
     CustomUser,
-    Tag, Recipt,
-    Ingredients, Favorited, ShoppingCart, Follow, IngredientsRecipt)
+    Tag, Recipe,
+    Ingredients, Favorited, ShoppingCart, Follow, IngredientsRecipe)
 from .serializers import (
     TagsSerializer,
     ReciptSerializer,
     IngredientSerializer,
     CreateReciptSerializer, FollowSerializer, ReciptShortSerializer)
 from .permissions import GetUserPermission, RecieptPermission
-from .filters import RecipeFilter
+from .filters import RecipeFilter, IngredientsFilter
 from .paginations import FollowPagination
 from .utils import create_and_delete_method
 
@@ -58,7 +58,7 @@ class TagModelViewSet(ModelViewSet):
 
 
 class ReciptViewSet(ModelViewSet):
-    queryset = Recipt.objects.all()
+    queryset = Recipe.objects.all()
     permission_classes = (RecieptPermission,)
     filter_backends = [DjangoFilterBackend, ]
     filterset_class = RecipeFilter
@@ -95,7 +95,7 @@ class ReciptViewSet(ModelViewSet):
         user = request.user
         if not user.in_shopping_cart.exists():
             return Response(status=status.HTTP_400_BAD_REQUEST)
-        ingredients = IngredientsRecipt.objects.filter(
+        ingredients = IngredientsRecipe.objects.filter(
             recipes__users_shopping_cart__user=request.user
         ).values(
             'ingredient__name',
@@ -127,5 +127,5 @@ class IngredientsViewSet(ModelViewSet):
     pagination_class = None
     http_method_names = ['get']
     filter_backends = [DjangoFilterBackend, ]
-    filterset_fields = ('name',)
+    filterset_class = IngredientsFilter
     permission_classes = [GetUserPermission, ]

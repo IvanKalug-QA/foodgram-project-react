@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.contrib.auth import get_user_model
 from django.db.models import Exists, OuterRef
 
-from foods.models import Recipt
+from foods.models import Recipe
 
 User = get_user_model()
 
@@ -52,7 +52,7 @@ def create_and_delete_method(request,
             obj = get_object_or_404(User, pk=pk)
         else:
             try:
-                obj = Recipt.objects.get(pk=pk)
+                obj = Recipe.objects.get(pk=pk)
             except ObjectDoesNotExist:
                 return return_400_bad_request('Такого рецепта нет!')
         serializer = serializator(
@@ -65,7 +65,7 @@ def create_and_delete_method(request,
         if 'subscribe' in request.path:
             obj = get_object_or_404(User, pk=pk)
         else:
-            obj = get_object_or_404(Recipt, pk=pk)
+            obj = get_object_or_404(Recipe, pk=pk)
         try:
             model.objects.get(
                 user=user, **{field_name: obj}).delete()

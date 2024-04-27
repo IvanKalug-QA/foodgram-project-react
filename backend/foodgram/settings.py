@@ -155,3 +155,5 @@ DJOSER = {
 CSRF_TRUSTED_ORIGINS = [
     'https://ivanfoodgram.zapto.org',
 ]
+
+PARSE_CSV = 'data/'
